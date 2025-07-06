@@ -18,7 +18,7 @@ def download_mp3():
 
     try:
         url = url.split("&list")[0]
-        ydl_opts = {'format': 'bestaudio/best'}
+        ydl_opts = {'geo_bypass': True, 'format': 'bestaudio/best'}
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
             audio_url = info['url']
