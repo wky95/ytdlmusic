@@ -6,6 +6,18 @@ import io
 app = Flask(__name__)
 app.secret_key = 'your-secret-key'
 
+def normalize_time(t):
+    parts = t.split(':')
+    parts = [int(p) for p in parts]
+
+    if len(parts) == 2:  # mm:ss
+        h, m, s = 0, parts[0], parts[1]
+    elif len(parts) == 3:  # hh:mm:ss
+        h, m, s = parts
+    else:
+        raise ValueError("時間格式錯誤")
+    return f"{h:02}:{m:02}:{s:02}"
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -13,9 +25,8 @@ def index():
 @app.route('/audio', methods=['POST'])
 def download_mp3():
     url = request.form.get('url')
-    start = request.form.get('start')  # e.g. 00:30
-    end = request.form.get('end')      # e.g. 02:00
-
+    start = request.form.get('start')  
+    end = request.form.get('end')      
     try:
         url = url.split("&list")[0]
         ydl_opts = {'geo_bypass': True, 'format': 'bestaudio/best'}
@@ -29,14 +40,18 @@ def download_mp3():
 
         # ➕ 如果有設定裁剪時間就加上
         if start:
+            start = normalize_time(start)
+            print(start)
             ffmpeg_cmd += ['-ss', start]
         if end:
+            end = normalize_time(end)
+            print(end)
             ffmpeg_cmd += ['-to', end]
 
         ffmpeg_cmd += [
             '-i', audio_url,
             '-f', 'mp3',
-            '-ab', '192000',
+            '-ab', '320000',
             '-vn',
             '-loglevel', 'quiet',
             'pipe:1'

@@ -28,10 +28,22 @@
             return match ? match[1] : null;
         }
     </script>
+
 </head>
 <body>
     <div class="container">
-        <h2>YouTube MP3 裁剪下載</h2>
+        <h2>YouTube MP3 下載</h2>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                <div style="background-color: #fff3cd; border-left: 5px solid #ffc107; padding: 10px; margin: 1em 0; border-radius: 5px;">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
 
         <form action="{{ url_for('download_mp3') }}" method="POST">
             <label for="url">YouTube URL:</label>
@@ -41,10 +53,10 @@
                 <iframe id="video-preview" allowfullscreen></iframe>
             </div>
 
-            <label for="start">開始時間 (00:30):</label>
+            <label for="start">開始時間:</label>
             <input type="text" id="start" name="start" placeholder="mm:ss 或 hh:mm:ss">
 
-            <label for="end">結束時間 (02:00):</label>
+            <label for="end">結束時間:</label>
             <input type="text" id="end" name="end" placeholder="mm:ss 或 hh:mm:ss">
 
             <input type="submit" value="下載 MP3">
