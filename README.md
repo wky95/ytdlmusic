@@ -4,6 +4,6 @@ vim ~/.zshrc
 ```
 加入
 ```sh
-alias ytmp3='cd $(path) && ./run.sh'
+alias ytmp3='cd ${PATH} && ./run.sh'
 ```
-$(path) 是資料夾位置
+${PATH} 是資料夾位置
