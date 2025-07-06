@@ -1,0 +1,65 @@
+from flask import Flask, request, send_file, render_template, redirect, url_for, flash
+import yt_dlp
+import subprocess
+import io
+
+app = Flask(__name__)
+app.secret_key = 'your-secret-key'
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/audio', methods=['POST'])
+def download_mp3():
+    url = request.form.get('url')
+    start = request.form.get('start')  # e.g. 00:30
+    end = request.form.get('end')      # e.g. 02:00
+
+    try:
+        url = url.split("&list")[0]
+        ydl_opts = {'format': 'bestaudio/best'}
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=False)
+            audio_url = info['url']
+            title = info['title']
+
+        # 動態建立 ffmpeg 指令
+        ffmpeg_cmd = ['ffmpeg']
+
+        # ➕ 如果有設定裁剪時間就加上
+        if start:
+            ffmpeg_cmd += ['-ss', start]
+        if end:
+            ffmpeg_cmd += ['-to', end]
+
+        ffmpeg_cmd += [
+            '-i', audio_url,
+            '-f', 'mp3',
+            '-ab', '192000',
+            '-vn',
+            '-loglevel', 'quiet',
+            'pipe:1'
+        ]
+
+        process = subprocess.Popen(ffmpeg_cmd, stdout=subprocess.PIPE)
+        mp3_data = process.stdout.read()
+        process.wait()
+
+        if process.returncode != 0:
+            raise Exception("ffmpeg failed")
+
+        return send_file(
+            io.BytesIO(mp3_data),
+            mimetype='audio/mpeg',
+            as_attachment=True,
+            download_name=f"{title}.mp3"
+        )
+
+    except Exception as e:
+        print("Error:", e)
+        flash('下載或轉換過程發生錯誤')
+        return redirect(url_for('index'))
+
+if __name__ == '__main__':
+    app.run(debug=True)
